@@ -7,12 +7,22 @@ import { ITask } from "@/types";
 import { calculateDuration, formatDate } from "@/utils/utils";
 import { CheckSquare, Clock, Edit, Loader, Trash } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
+const TaskTable = ({
+  task,
+  index,
+  isFetching,
+}: {
+  task: ITask;
+  index: number;
+  isFetching: boolean;
+}) => {
   const dispatch = useAppDispatch();
   const { pomodaro } = useAppSelector((state) => state.pomodaro);
   const [loading, setLoading] = useState("");
   const [updateTask] = useUpdateTaskMutation();
+  const navigate = useNavigate();
 
   const formatTime = (time: string) => {
     if (!time) return "";
@@ -39,6 +49,7 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
 
   const handlePromoDaro = (startTime: string, start: boolean, task: ITask) => {
     const data = {
+      id: task._id,
       taskName: task.taskName,
       date: task.date,
       scheduleTime: task.startTime,
@@ -129,6 +140,9 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
                   task
                 );
                 handleUpdateTask(task._id);
+                if (isFetching === false && task.status === "inProgress") {
+                  navigate("/pomodoro");
+                }
               }}
               disabled={
                 task.status === "inProgress" ||

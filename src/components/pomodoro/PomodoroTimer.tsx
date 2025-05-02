@@ -1,109 +1,170 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { useAppSelector } from "@/hooks/useAppSelector";
-import { useAppDispatch } from "@/hooks/useAppDispatch";
-import { setTimeTrack } from "@/redux/features/pomodaro/pomodaroSlice";
+import { useAppDispatch } from "@/redux/hook";
+import { resetPromo } from "@/redux/features/pomodaro/pomodaroSlice";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { useUpdateStartAndEndTimeMutation } from "@/redux/features/task/taskApi";
 
-type TimerMode = "pomodoro" | "shortBreak" | "mediumBreak" | "longBreak";
-
-interface TimerSettings {
-  pomodoro: number;
-  shortBreak: number;
-  mediumBreak: number;
-  longBreak: number;
-}
+const TIMER_STORAGE_KEY = "pomodoro_timer_state";
 
 const PomodoroTimer = () => {
-  const { pomodaro, timeTrack } = useAppSelector((state) => state.pomodaro);
-  const dispatch = useAppDispatch();
+  const { pomodaro } = useAppSelector((state) => state.pomodaro);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isActive, setIsActive] = useState<boolean>(false);
-  const [timerMode, setTimerMode] = useState<TimerMode>("pomodoro");
-  const [autoStartBreaks, setAutoStartBreaks] = useState<boolean>(true);
+  const [pausedTime, setPausedTime] = useState<number | null>(null);
+  const [initialized, setInitialized] = useState<boolean>(false);
+  const [updateStartAndEndTime] = useUpdateStartAndEndTimeMutation();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  // Timer duration settings (in minutes)
-  const timerSettings: TimerSettings = {
-    pomodoro: 25,
-    shortBreak: 5,
-    mediumBreak: 10,
-    longBreak: 20,
+  // Create a unique task identifier using taskName and date
+  const getTaskKey = () => {
+    return pomodaro?.taskName && pomodaro?.date
+      ? `${pomodaro.taskName}_${pomodaro.date}`
+      : null;
   };
 
-  // Initialize timer with current mode's time
-  useEffect(() => {
-    setTimeLeft(timerSettings[timerMode] * 60);
-  }, [timerMode]);
+  // Parse time from startTime format (e.g., "0h 10m")
+  const parseStartTime = () => {
+    if (!pomodaro?.startTime) return 0;
 
-  // Parse the startTime format from Redux store
-  useEffect(() => {
-    if (pomodaro?.startTime) {
-      const timePattern = /(\d+)h\s+(\d+)m/;
-      const match = pomodaro.startTime.match(timePattern);
+    const timePattern = /(\d+)h\s+(\d+)m/;
+    const match = pomodaro.startTime.match(timePattern);
 
-      if (match) {
-        const hours = parseInt(match[1], 10);
-        const minutes = parseInt(match[2], 10);
-        const totalSeconds = hours * 60 * 60 + minutes * 60;
-        setTimeLeft(totalSeconds);
+    if (match) {
+      const hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      return hours * 60 * 60 + minutes * 60; // Convert to seconds
+    }
+
+    return 0;
+  };
+
+  useEffect(() => {
+    if (initialized) return;
+
+    const taskKey = getTaskKey();
+    const initialDuration = parseStartTime();
+
+    if (taskKey) {
+      const savedState = localStorage.getItem(TIMER_STORAGE_KEY);
+
+      if (savedState) {
+        try {
+          const {
+            taskKey: savedTaskKey,
+            timeLeft: savedTimeLeft,
+            isActive: savedIsActive,
+            pausedTime: savedPausedTime,
+          } = JSON.parse(savedState);
+
+          if (savedTaskKey === taskKey) {
+            if (savedTimeLeft && savedTimeLeft > 0) {
+              setTimeLeft(savedTimeLeft);
+              setIsActive(savedIsActive);
+              setPausedTime(savedPausedTime);
+
+              setInitialized(true);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error restoring timer state:", error);
+        }
       }
     }
-  }, [pomodaro?.startTime]);
 
-  // Handle the timer countdown
+    if (initialDuration > 0) {
+      setTimeLeft(initialDuration);
+
+      if (pomodaro?.start) {
+        setIsActive(true);
+      }
+    }
+
+    setInitialized(true);
+  }, [pomodaro]); // Re-run if pomodaro changes
+
+  // Handle timer countdown
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval = null;
 
     if (isActive && timeLeft > 0) {
+      if (timeLeft === parseStartTime()) {
+        const timeStart = new Date().toISOString();
+        const payload = {
+          workStartTime: timeStart,
+        };
+        updateStartAndEndTime({ id: pomodaro?.id, payload });
+      }
+
       interval = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
-    } else if (isActive && timeLeft === 0) {
+    } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
+      const timeStart = new Date().toISOString();
 
-      // Auto-start break if enabled
-      if (autoStartBreaks && timerMode === "pomodoro") {
-        // Switch to short break
-        changeMode("shortBreak");
-        setIsActive(true);
-      }
+      const payload = {
+        workEndTime: timeStart,
+      };
+      updateStartAndEndTime({ id: pomodaro?.id, payload });
+      dispatch(resetPromo());
+      Swal.fire({
+        title: "Congratulations!",
+        text: "You have completed your task!",
+        icon: "success",
+      });
+      navigate("/tasks");
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, autoStartBreaks, timerMode]);
+  }, [isActive, timeLeft]);
 
-  const handleTimeTrack = () => {
-    let trackData;
-    if (isActive) {
-      trackData = {
-        id: Math.random().toString(36).substring(2, 15),
-        date: pomodaro?.date,
-        taskName: pomodaro?.taskName,
-        pauseTime: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
+  // Save state to localStorage whenever relevant state changes
+  useEffect(() => {
+    if (!initialized) return;
+
+    const taskKey = getTaskKey();
+
+    if (taskKey) {
+      const stateToSave = {
+        taskKey,
+        timeLeft,
+        isActive,
+        pausedTime,
       };
-    } else {
-      trackData = {
-        id: Math.random().toString(36).substring(2, 15),
-        date: pomodaro?.date,
-        taskName: pomodaro?.taskName,
-        playTime: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
-      };
+
+      localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(stateToSave));
+    }
+  }, [timeLeft, isActive, pausedTime, initialized]);
+
+  // Toggle timer between play and pause
+  const toggleTimer = () => {
+    // If timer is at 0, reset it to initial duration before starting
+    if (timeLeft === 0 && !isActive) {
+      const initialDuration = parseStartTime();
+      if (initialDuration > 0) {
+        setTimeLeft(initialDuration);
+      }
     }
 
-    dispatch(setTimeTrack(trackData));
+    if (isActive) {
+      setIsActive(false);
+      setPausedTime(timeLeft);
+    } else {
+      setIsActive(true);
+      setPausedTime(null);
+    }
   };
 
-  // Format the time display as MM:SS
-  const formatTime = (): string => {
+  // Format time for display (MM:SS)
+  const formatTime = () => {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
 
@@ -112,59 +173,46 @@ const PomodoroTimer = () => {
       .padStart(2, "0")}`;
   };
 
-  // Change timer mode
-  const changeMode = (mode: TimerMode): void => {
-    setTimerMode(mode);
-    setIsActive(false);
-    setTimeLeft(timerSettings[mode] * 60);
-  };
-
-  // Start or pause the timer
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-    handleTimeTrack();
-  };
-
-  // Toggle auto-start breaks
-  const toggleAutoStartBreaks = (): void => {
-    setAutoStartBreaks(!autoStartBreaks);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-5 px-4">
       {/* Header with description */}
       <h1 className="text-3xl font-bold text-gray-800 mb-2">
-        {pomodaro?.taskName}
+        {pomodaro?.taskName || "Pomodoro Timer"}
       </h1>
       <p className="text-sm text-gray-600 text-center max-w-lg mb-2">
         Date :{" "}
-        {new Date(pomodaro.date).toLocaleDateString("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          year: "2-digit",
-        })}
-        ;
+        {pomodaro?.date
+          ? new Date(pomodaro.date).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "2-digit",
+            })
+          : "-"}
       </p>
       <p className="text-sm text-gray-600 text-center max-w-lg mb-2">
         Schedule Time :{" "}
-        {new Date(
-          `1970-01-01T${pomodaro?.scheduleTime || "00:00"}`
-        ).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })}
+        {pomodaro?.scheduleTime
+          ? new Date(
+              `1970-01-01T${pomodaro.scheduleTime || "00:00"}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "-"}
       </p>
       <p className="text-sm text-gray-600 text-center max-w-lg mb-8">
         Finish Time :{" "}
-        {new Date(
-          `1970-01-01T${pomodaro?.scheduleFinishTime || "00:00"}`
-        ).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })}
+        {pomodaro?.scheduleFinishTime
+          ? new Date(
+              `1970-01-01T${pomodaro.scheduleFinishTime || "00:00"}`
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "-"}
       </p>
 
       {/* Pattern background */}
@@ -178,79 +226,20 @@ const PomodoroTimer = () => {
         ></div>
       </div>
 
-      {/* Timer mode selection */}
+      {/* Pomodoro mode button */}
       <div className="flex flex-wrap justify-center gap-4 mb-8">
-        <button
-          onClick={() => changeMode("pomodoro")}
-          className={`flex items-center px-4 py-2 rounded-full ${
-            timerMode === "pomodoro"
-              ? "bg-blue-700 text-white"
-              : "bg-white border border-gray-300 text-gray-700"
-          }`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full mr-2 ${
-              timerMode === "pomodoro" ? "bg-white" : "border border-gray-400"
-            }`}
-          ></div>
+        <button className="flex items-center px-4 py-2 rounded-full bg-blue-700 text-white">
+          <div className="w-4 h-4 rounded-full mr-2 bg-white"></div>
           Pomodoro
-        </button>
-
-        <button
-          onClick={() => changeMode("shortBreak")}
-          className={`flex items-center px-4 py-2 rounded-full ${
-            timerMode === "shortBreak"
-              ? "bg-blue-700 text-white"
-              : "bg-white border border-gray-300 text-gray-700"
-          }`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full mr-2 ${
-              timerMode === "shortBreak" ? "bg-white" : "border border-gray-400"
-            }`}
-          ></div>
-          Short break (5m)
-        </button>
-
-        <button
-          onClick={() => changeMode("mediumBreak")}
-          className={`flex items-center px-4 py-2 rounded-full ${
-            timerMode === "mediumBreak"
-              ? "bg-blue-700 text-white"
-              : "bg-white border border-gray-300 text-gray-700"
-          }`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full mr-2 ${
-              timerMode === "mediumBreak"
-                ? "bg-white"
-                : "border border-gray-400"
-            }`}
-          ></div>
-          Medium break (10m)
-        </button>
-
-        <button
-          onClick={() => changeMode("longBreak")}
-          className={`flex items-center px-4 py-2 rounded-full ${
-            timerMode === "longBreak"
-              ? "bg-blue-700 text-white"
-              : "bg-white border border-gray-300 text-gray-700"
-          }`}
-        >
-          <div
-            className={`w-4 h-4 rounded-full mr-2 ${
-              timerMode === "longBreak" ? "bg-white" : "border border-gray-400"
-            }`}
-          ></div>
-          Long break (20m)
         </button>
       </div>
 
-      <div className="bg-blue-200 px-2 py-1 flex justify-start items-center rounded">
+      <div className="bg-blue-200 px-2 py-1 flex justify-start items-center rounded mb-6">
         <p className="text-sm text-gray-600 text-center max-w-lg ">
           Working Start Time :{" "}
-          {timeTrack.length > 0 ? timeTrack[0]?.playTime : "00:00"}
+          {/* {timeTrack.length > 0 && timeTrack[0]?.playTime
+            ? timeTrack[0]?.playTime
+            : "Not started"} */}
         </p>
       </div>
 
@@ -265,30 +254,12 @@ const PomodoroTimer = () => {
           onClick={toggleTimer}
           className="px-6 py-3 bg-blue-700 text-white font-medium rounded hover:bg-green-600 transition-colors w-32"
         >
-          {isActive ? "Pause" : "Start"}
+          {isActive ? "Pause" : timeLeft > 0 ? "Resume" : "Start"}
         </button>
       </div>
 
-      {/* Timer settings */}
+      {/* Timer info */}
       <div className="w-full max-w-2xl">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="flex items-center justify-between p-3 bg-white rounded border border-gray-200">
-            <span className="text-gray-700">Auto Pomodoro sequence?</span>
-            <button
-              onClick={toggleAutoStartBreaks}
-              className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                autoStartBreaks ? "bg-blue-700" : "bg-gray-300"
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${
-                  autoStartBreaks ? "translate-x-6" : "translate-x-0"
-                }`}
-              ></div>
-            </button>
-          </div>
-        </div>
-
         <div className="mt-6 text-center text-sm text-gray-600">
           <p>Pomodoro objective: Finish your urgent task in 1 hour</p>
           <div className="flex items-center justify-center mt-1">

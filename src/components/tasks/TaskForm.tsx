@@ -29,7 +29,6 @@ const TaskForm = () => {
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     try {
       const res = await createTasks(data).unwrap();
-      console.log(res);
       if (res?.success) {
         toast.success(res.message);
       }

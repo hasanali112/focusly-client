@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 interface IPomodaroState {
   pomodaro: {
+    id: string | null;
     taskName: string | null;
     date: string | null;
     scheduleTime: string | null;
@@ -15,6 +16,7 @@ interface IPomodaroState {
 
 const initialState: IPomodaroState = {
   pomodaro: {
+    id: null,
     taskName: null,
     date: null,
     scheduleTime: null,
@@ -35,8 +37,12 @@ const pomodaroSlice = createSlice({
     setTimeTrack: (state, action) => {
       state.timeTrack.push(action.payload);
     },
+    resetPromo: (state) => {
+      state.pomodaro = initialState.pomodaro;
+      state.timeTrack = [];
+    },
   },
 });
 
-export const { setPomodaro, setTimeTrack } = pomodaroSlice.actions;
+export const { setPomodaro, setTimeTrack, resetPromo } = pomodaroSlice.actions;
 export default pomodaroSlice.reducer;
