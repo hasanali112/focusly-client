@@ -38,7 +38,6 @@ const TaskListUI = () => {
     data: tasksData,
     isLoading,
     isError,
-    isFetching,
   } = useGetAllTasksQuery(queryParams);
 
   // Extract tasks and pagination info from response
@@ -93,12 +92,7 @@ const TaskListUI = () => {
           ) : tasks?.length > 0 ? (
             <div className="space-y-3 mt-4">
               {tasks?.map((task: ITask, index: number) => (
-                <TaskTable
-                  key={task._id}
-                  task={task}
-                  index={index}
-                  isFetching={isFetching}
-                />
+                <TaskTable key={task._id} task={task} index={index} />
               ))}
             </div>
           ) : (

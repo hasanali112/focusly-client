@@ -9,15 +9,7 @@ import { CheckSquare, Clock, Edit, Loader, Trash } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const TaskTable = ({
-  task,
-  index,
-  isFetching,
-}: {
-  task: ITask;
-  index: number;
-  isFetching: boolean;
-}) => {
+const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   const dispatch = useAppDispatch();
   const { pomodaro } = useAppSelector((state) => state.pomodaro);
   const [loading, setLoading] = useState("");
@@ -63,6 +55,7 @@ const TaskTable = ({
   const handleUpdateTask = (id: string) => {
     updateTask(id);
     setLoading(id);
+    navigate("/pomodoro");
   };
 
   return (
@@ -140,9 +133,6 @@ const TaskTable = ({
                   task
                 );
                 handleUpdateTask(task._id);
-                if (isFetching === false && task.status === "inProgress") {
-                  navigate("/pomodoro");
-                }
               }}
               disabled={
                 task.status === "inProgress" ||

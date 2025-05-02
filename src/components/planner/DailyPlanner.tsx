@@ -1,7 +1,9 @@
+import Report from "@/pages/Report";
+
 const DailyPlanner = () => {
   return (
     <div>
-      <h1>Daily Planner</h1>
+      <Report />
     </div>
   );
 };

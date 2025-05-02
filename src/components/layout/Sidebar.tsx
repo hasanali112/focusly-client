@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   CheckSquare,
-  Clock,
   Calendar,
   DollarSign,
   Briefcase,
@@ -21,7 +20,6 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { path: "/", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { path: "/tasks", icon: <CheckSquare size={20} />, label: "Tasks" },
-    { path: "/pomodoro", icon: <Clock size={20} />, label: "Pomodoro" },
     { path: "/planner", icon: <Calendar size={20} />, label: "Daily Planner" },
     { path: "/expenses", icon: <DollarSign size={20} />, label: "Expenses" },
     { path: "/projects", icon: <Briefcase size={20} />, label: "Projects" },

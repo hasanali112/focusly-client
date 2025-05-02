@@ -9,6 +9,8 @@ export interface ITask {
   status: string;
   pomodoros: boolean;
   completedPomodoros: number;
+  workStartTime?: string;
+  workEndTime?: string;
 }
 
 export interface Project {
@@ -60,4 +62,37 @@ export interface DailyPlan {
   date: string;
   taskIds: string[];
   notes: string;
+}
+
+export interface IProgressItem {
+  name: string;
+  actual: number;
+  plan: number;
+}
+
+export interface ITeamMember {
+  name: string;
+  completed: number;
+  remaining: number;
+  overdue: number;
+}
+
+export interface IStatusData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface ICostData {
+  name: string;
+  value: number;
+}
+
+export interface ITimeMetrics {
+  planned: number;
+  actual: number;
+  slippage: number;
+  plannedPercent: number;
+  actualPercent: number;
+  slippagePercent: number;
 }

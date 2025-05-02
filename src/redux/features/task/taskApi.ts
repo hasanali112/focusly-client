@@ -39,6 +39,13 @@ const taskApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Task"],
     }),
+    getSingleTask: builder.query({
+      query: (id) => ({
+        url: `/task/get-single-task/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["Task"],
+    }),
     updateStartAndEndTime: builder.mutation({
       query: ({ id, payload }) => ({
         url: `/task/update-start-and-end-time/${id}`,
@@ -55,4 +62,5 @@ export const {
   useGetAllTasksQuery,
   useUpdateTaskMutation,
   useUpdateStartAndEndTimeMutation,
+  useGetSingleTaskQuery,
 } = taskApi;

@@ -6,7 +6,10 @@ import { useAppDispatch } from "@/redux/hook";
 import { resetPromo } from "@/redux/features/pomodaro/pomodaroSlice";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { useUpdateStartAndEndTimeMutation } from "@/redux/features/task/taskApi";
+import {
+  useGetSingleTaskQuery,
+  useUpdateStartAndEndTimeMutation,
+} from "@/redux/features/task/taskApi";
 
 const TIMER_STORAGE_KEY = "pomodoro_timer_state";
 
@@ -17,6 +20,7 @@ const PomodoroTimer = () => {
   const [pausedTime, setPausedTime] = useState<number | null>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [updateStartAndEndTime] = useUpdateStartAndEndTimeMutation();
+  const { data: taskData } = useGetSingleTaskQuery(pomodaro?.id);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -237,9 +241,7 @@ const PomodoroTimer = () => {
       <div className="bg-blue-200 px-2 py-1 flex justify-start items-center rounded mb-6">
         <p className="text-sm text-gray-600 text-center max-w-lg ">
           Working Start Time :{" "}
-          {/* {timeTrack.length > 0 && timeTrack[0]?.playTime
-            ? timeTrack[0]?.playTime
-            : "Not started"} */}
+          {taskData?.workStartTime ? taskData?.workStartTime : "Not started"}
         </p>
       </div>
 
