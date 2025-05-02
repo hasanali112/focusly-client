@@ -32,7 +32,18 @@ const taskApi = baseApi.injectEndpoints({
       },
       providesTags: ["Task"],
     }),
+    updateTask: builder.mutation({
+      query: (id) => ({
+        url: `/task/update-task/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Task"],
+    }),
   }),
 });
 
-export const { useCreateTasksMutation, useGetAllTasksQuery } = taskApi;
+export const {
+  useCreateTasksMutation,
+  useGetAllTasksQuery,
+  useUpdateTaskMutation,
+} = taskApi;

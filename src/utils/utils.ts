@@ -18,3 +18,14 @@ export const calculateDuration = (startTime: string, endTime: string) => {
 
   return `${hourDiff}h ${minuteDiff}m`;
 };
+
+export const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    weekday: "long",
+  });
+};

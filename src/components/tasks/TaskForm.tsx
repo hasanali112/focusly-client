@@ -20,18 +20,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateTasksMutation } from "@/redux/features/task/taskApi";
+import { toast } from "sonner";
 
 const TaskForm = () => {
   const { register, setValue, handleSubmit } = useForm();
   const [createTasks, { isLoading }] = useCreateTasksMutation();
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-    console.log(data);
     try {
       const res = await createTasks(data).unwrap();
       console.log(res);
+      if (res?.success) {
+        toast.success(res.message);
+      }
     } catch (error) {
       console.error("Error creating task:", error);
+      toast.error("Error creating task");
     }
   };
 
@@ -124,9 +128,9 @@ const TaskForm = () => {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="inProgress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
