@@ -96,3 +96,11 @@ export interface ITimeMetrics {
   actualPercent: number;
   slippagePercent: number;
 }
+
+export interface IExpense {
+  _id: string;
+  expenseName: string;
+  description: string;
+  amount: number;
+  date: string;
+}

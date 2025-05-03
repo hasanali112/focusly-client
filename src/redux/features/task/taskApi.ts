@@ -1,6 +1,6 @@
 import { baseApi } from "@/redux/api/baseApi";
 
-interface ITask {
+export interface IArgs {
   key: string;
   value: string;
 }
@@ -19,7 +19,7 @@ const taskApi = baseApi.injectEndpoints({
       query: (args) => {
         const params = new URLSearchParams();
         if (args) {
-          args.forEach((arg: ITask) => {
+          args.forEach((arg: IArgs) => {
             params.append(arg.key, arg.value);
           });
         }
