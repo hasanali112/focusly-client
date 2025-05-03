@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Search } from "lucide-react";
 
 import ExpenseForm from "./ExpenseForm";
@@ -159,7 +160,10 @@ const ExpenseList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ৳{" "}
                       {expenses
-                        .reduce((sum, expense) => sum + expense.amount, 0)
+                        .reduce(
+                          (sum: any, expense: any) => sum + expense.amount,
+                          0
+                        )
                         .toFixed(2)}
                     </td>
                   </tr>

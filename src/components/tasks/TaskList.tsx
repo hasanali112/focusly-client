@@ -9,25 +9,14 @@ import TaskHeader from "./taskHeader/TaskHeader";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TaskTable from "./taskTable/TaskTable";
 
-const taskTableData = [
-  "Task No.",
-  "Task Name",
-  "Start - End Time",
-  "Duration",
-  "Pomodaro Start",
-  "Priority",
-  "Status",
-  "Actions",
-];
-
 const TaskListUI = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("");
+  const [activeTab, setActiveTab] = useState("pending");
 
   const queryParams = [
     { key: "page", value: currentPage },
     { key: "limit", value: 20 },
-    { key: "sort", value: "createdAt" },
+    { key: "sort", value: "-status" },
   ];
 
   if (activeTab) {
@@ -62,22 +51,13 @@ const TaskListUI = () => {
         onValueChange={(value) => setActiveTab(value)}
       >
         <TabsList className="grid w-[400px] grid-cols-4 ">
-          <TabsTrigger value="">All Tasks</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="inProgress">In Progress</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="">All Tasks</TabsTrigger>
         </TabsList>
 
-        <div className="p-4 sm:p-6">
-          {/* Task table headers */}
-          <div className="hidden md:grid grid-cols-8 gap-4 border-b border-gray-200 pb-2">
-            {taskTableData.map((header, index) => (
-              <div key={index} className="text-sm font-medium text-gray-600">
-                {header}
-              </div>
-            ))}
-          </div>
-
+        <div className=" sm:p-6">
           {/* Task items */}
           {isLoading ? (
             <div className="py-12 text-center">
@@ -90,7 +70,7 @@ const TaskListUI = () => {
               </p>
             </div>
           ) : tasks?.length > 0 ? (
-            <div className="space-y-3 mt-4">
+            <div className=" grid grid-cols-4 gap-5 mt-4">
               {tasks?.map((task: ITask, index: number) => (
                 <TaskTable key={task._id} task={task} index={index} />
               ))}
