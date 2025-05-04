@@ -1,20 +1,42 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import logo from "@/assets/logo.png";
+import { useSignupMutation } from "@/redux/features/auth/authApi";
+import { setUser } from "@/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hook";
+import decodeToken from "@/utils/verifyToken";
+import { Loader } from "lucide-react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Registration = () => {
   const { register, handleSubmit } = useForm();
+  const [signup, { isLoading }] = useSignupMutation();
+  const dispath = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const from = location.state?.from?.pathname || "/";
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-    console.log(data);
+    try {
+      const res = await signup(data).unwrap();
+      if (res?.data?.accessToken) {
+        const user = decodeToken(res?.data?.accessToken);
+        dispath(setUser({ user: user, token: res?.data?.accessToken }));
+      }
+      toast.success(res?.message);
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      toast.error(err.data.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-purple-100 relative">
-      <div className="max-w-[1400px] w-full mx-auto flex items-center justify-center pt-10">
-        <img src={logo} alt="Logo" className="w-36 h-36" />
+      <div className="max-w-[1400px] w-full mx-auto flex items-center justify-center pt-5 md:pt-10">
+        <img src={logo} alt="Logo" className="w-24 h-24 md:w-36 md:h-36" />
       </div>
-      <div className="flex items-center justify-center ">
+      <div className="flex items-center justify-center px-4 py-8">
         <div className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
           <div
             className="absolute inset-0 w-full h-full bg-repeat"
@@ -25,9 +47,9 @@ const Registration = () => {
           ></div>
         </div>
 
-        <div className="flex w-full max-w-4xl overflow-hidden rounded-lg shadow-lg z-10">
-          {/* Left side with purple gradient and wavy patterns */}
-          <div className="relative w-1/2 bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white">
+        <div className="flex flex-col md:flex-row w-full max-w-4xl overflow-hidden rounded-lg shadow-lg z-10 -translate-y-8">
+          {/* Left side with purple gradient and wavy patterns - hidden on mobile */}
+          <div className="hidden md:block relative md:w-1/2 bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white">
             {/* Decorative elements */}
             <div className="absolute top-8 left-16 text-xl font-thin text-white opacity-70">
               +
@@ -76,8 +98,16 @@ const Registration = () => {
             </div>
           </div>
 
-          {/* Right side with login form */}
-          <div className="w-1/2 bg-white p-8">
+          {/* Mobile-only mini header with welcome text */}
+          <div className="md:hidden w-full bg-gradient-to-br from-purple-500 to-purple-700 p-6 text-white text-center">
+            <h1 className="text-xl font-bold">Welcome!</h1>
+            <p className="mt-1 text-white text-opacity-90 text-sm">
+              Create an account to get started
+            </p>
+          </div>
+
+          {/* Right side with signup form */}
+          <div className="w-full md:w-1/2 bg-white p-6 md:p-8">
             <div className="mx-auto">
               <h2 className="text-xl font-medium text-gray-700 mb-6">
                 Sign Up
@@ -118,8 +148,15 @@ const Registration = () => {
                   </div>
 
                   <div>
-                    <button className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md">
-                      Sign Up
+                    <button
+                      type="submit"
+                      className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md flex items-center justify-center"
+                    >
+                      {isLoading ? (
+                        <Loader className="animate-spin text-center" />
+                      ) : (
+                        "Sign Up"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -136,6 +173,11 @@ const Registration = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Copyright footer */}
+      <div className="w-full text-center pb-4 text-gray-500 text-sm py-4">
+        &copy; {new Date().getFullYear()} EfficiZen. All rights reserved.
       </div>
     </div>
   );

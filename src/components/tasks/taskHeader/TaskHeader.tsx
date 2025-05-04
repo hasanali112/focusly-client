@@ -4,7 +4,7 @@ import TaskForm from "../TaskForm";
 const TaskHeader = () => {
   return (
     <div>
-      <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r bg-linear-to-bl from-violet-500 to-fuchsia-500 text-white">
+      <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r bg-linear-to-bl from-violet-500 to-fuchsia-500 text-white rounded-md">
         <div>
           <h2 className="text-xl font-semibold">Task Manager</h2>
           <p className="text-indigo-100 text-sm mt-1 hidden sm:block">
