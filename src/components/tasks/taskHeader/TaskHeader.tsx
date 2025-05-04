@@ -3,17 +3,26 @@ import TaskForm from "../TaskForm";
 
 const TaskHeader = () => {
   return (
-    <div>
-      <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r bg-linear-to-bl from-violet-500 to-fuchsia-500 text-white rounded-md">
-        <div>
-          <h2 className="text-xl font-semibold">Task Manager</h2>
-          <p className="text-indigo-100 text-sm mt-1 hidden sm:block">
-            Organize your tasks efficiently
-          </p>
+    <div className="w-full">
+      <div className="md:p-4 p-6 border-b border-gray-200 flex flex-col gap-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-md">
+        {/* Header title and description */}
+        <div className="flex flex-col md:flex-row md:justify-between sm:items-center w-full gap-2">
+          <div>
+            <h2 className="text-xl font-semibold">Task Manager</h2>
+            <p className="text-indigo-100 text-sm mt-1">
+              Organize your tasks efficiently
+            </p>
+          </div>
+
+          {/* Task Form button only visible on larger screens */}
+          <div className="hidden md:block">
+            <TaskForm />
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-initial">
+        {/* Search and filters row */}
+        <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+          <div className="relative flex-1 w-full">
             <input
               type="text"
               placeholder="Search tasks..."
@@ -37,14 +46,19 @@ const TaskHeader = () => {
             </div>
           </div>
 
-          <button
-            className="p-2 rounded-md bg-indigo-700 text-white hover:bg-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="Filter tasks"
-          >
-            <Filter size={18} />
-          </button>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <button
+              className="p-2 rounded-md bg-indigo-700 text-white hover:bg-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+              aria-label="Filter tasks"
+            >
+              <Filter size={18} />
+            </button>
 
-          <TaskForm />
+            {/* Task Form button visible only on mobile */}
+            <div className="md:hidden block">
+              <TaskForm />
+            </div>
+          </div>
         </div>
       </div>
     </div>

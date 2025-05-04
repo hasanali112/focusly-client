@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+
 import { useGetAllTasksQuery } from "@/redux/features/task/taskApi";
 import { formatDate } from "@/utils/utils";
 import { ITask } from "@/types";
@@ -54,7 +54,7 @@ const TaskListUI = () => {
   };
 
   return (
-    <div className="rounded-lg overflow-hidden p-10">
+    <div className="rounded-lg overflow-hidden   md:p-10 py-10">
       {/* Header */}
       <TaskHeader />
 
@@ -62,13 +62,13 @@ const TaskListUI = () => {
         {formatDate(new Date().toISOString())}
       </h3>
 
-      <div className="min-h-[80vh]">
+      <div className="md:min-h-[80vh] h-full">
         <Tabs
           defaultValue="pending"
           className="w-full mx-auto pt-4"
           onValueChange={handleTabChange}
         >
-          <TabsList className="grid w-[400px] grid-cols-4">
+          <TabsList className="grid md:w-[400px] grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="inProgress">In Progress</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
@@ -93,7 +93,7 @@ const TaskListUI = () => {
               </p>
             </div>
           ) : tasks?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-10 md:mt-4">
               {tasks.map((task: ITask, index: number) => (
                 <TaskTable key={task._id} task={task} index={index} />
               ))}
@@ -108,18 +108,13 @@ const TaskListUI = () => {
 
       {/* Pagination */}
       {tasksData?.meta && (
-        <div className="pb-5 flex justify-end items-center w-full">
+        <div className="md:pb-5 flex justify-end items-center w-full py-5">
           <CustomPagination
             meta={tasksData.meta}
             onPageChange={handlePageChange}
           />
         </div>
       )}
-
-      {/* Floating action button for mobile */}
-      <button className="md:hidden fixed right-4 bottom-20 w-14 h-14 rounded-full bg-indigo-600 text-white shadow-lg flex items-center justify-center hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        <Plus size={24} />
-      </button>
     </div>
   );
 };
