@@ -8,6 +8,7 @@ import {
   Settings,
   Clipboard,
   Wallet,
+  Target,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { Button } from "../ui/button";
@@ -20,6 +21,11 @@ const Sidebar: React.FC = () => {
   const dispath = useAppDispatch();
   const navItems = [
     { path: "/", icon: <LayoutGrid size={20} />, label: "Dashboard" },
+    {
+      path: "/weekly-target",
+      icon: <Target size={20} />,
+      label: "Target and Tasks",
+    },
     { path: "/tasks", icon: <ClipboardEdit size={20} />, label: "Tasks" },
     { path: "/planner", icon: <Calendar size={20} />, label: "Daily Planner" },
     { path: "/expenses", icon: <Wallet size={20} />, label: "Expenses" },

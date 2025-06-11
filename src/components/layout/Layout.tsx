@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProtectRoutes from "@/routes/private.routes";
+import Chatbot from "@/bot/Chatbot";
 
 const Layout: React.FC = () => {
   return (
@@ -22,8 +23,9 @@ const Layout: React.FC = () => {
         <div className="flex-1 flex flex-col md:ml-52">
           <Header />
 
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-6 overflow-auto relative">
             <Outlet />
+            <Chatbot />
           </main>
         </div>
       </div>

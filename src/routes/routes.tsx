@@ -9,6 +9,7 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import Registration from "@/pages/Registration";
 import SettingsPage from "@/pages/SettingsPage";
 import TasksPage from "@/pages/TasksPage";
+import WeeklyTarget from "@/pages/WeeklyTarget";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -16,15 +17,46 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "tasks", element: <TasksPage /> },
-      { path: "pomodoro", element: <PomodoroPage /> },
-      { path: "planner", element: <PlannerPage /> },
-      { path: "expenses", element: <ExpensesPage /> },
-      { path: "projects", element: <ProjectsPage /> },
-      { path: "ideas", element: <IdeasPage /> },
-      { path: "settings", element: <SettingsPage /> },
-      { path: "*", element: <Navigate to="/" replace /> },
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: "weekly-target",
+        element: <WeeklyTarget />,
+      },
+      {
+        path: "tasks",
+        element: <TasksPage />,
+      },
+      {
+        path: "pomodoro",
+        element: <PomodoroPage />,
+      },
+      {
+        path: "planner",
+        element: <PlannerPage />,
+      },
+      {
+        path: "expenses",
+        element: <ExpensesPage />,
+      },
+      {
+        path: "projects",
+        element: <ProjectsPage />,
+      },
+      {
+        path: "ideas",
+        element: <IdeasPage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
     ],
   },
   { path: "/login", element: <Login /> },
