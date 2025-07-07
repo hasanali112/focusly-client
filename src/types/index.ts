@@ -1,7 +1,7 @@
 export interface ITask {
   pomodoro: boolean;
   _id: string;
-  taskName: string;
+  title: string;
   startTime: string;
   endTime: string;
   date: string;

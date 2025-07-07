@@ -7,7 +7,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm py-4 px-3 md:px-6 flex items-center justify-between border-b border-gray-200 md:w-full w-full">
+    <header className="bg-white shadow-sm py-4 px-3 md:px-6 flex items-center justify-between border-b border-gray-200 fixed top-0 w-full md:w-[calc(100%-80px)] lg:w-[calc(100%-240px)] z-40">
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate md:max-w-[200px] max-w-none">
         Welcome
       </h1>

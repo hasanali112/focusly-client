@@ -6,7 +6,7 @@ import { useAppDispatch } from "@/redux/hook";
 import { ITask } from "@/types";
 import { calculateDuration, formatDate } from "@/utils/utils";
 import { Clock, Edit, Loader, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
@@ -15,14 +15,66 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   const [loading, setLoading] = useState("");
   const [updateTask] = useUpdateTaskMutation();
   const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  const formatTime = (time: string) => {
-    if (!time) return "";
-    const [hours, minutes] = time.split(":");
-    let hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    hour = hour % 12 || 12;
-    return `${hour}:${minutes} ${ampm}`;
+  useEffect(() => {
+    if (pomodaro.id === task._id) {
+      const savedState = localStorage.getItem("pomodoro_timer_state");
+      if (savedState) {
+        try {
+          const { timeLeft: savedTimeLeft } = JSON.parse(savedState);
+          if (savedTimeLeft && savedTimeLeft > 0) {
+            setTimeLeft(savedTimeLeft);
+          }
+        } catch (error) {
+          console.error("Error restoring timer state:", error);
+        }
+      }
+    }
+  }, [pomodaro, task._id]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (pomodaro.id === task._id) {
+      interval = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime > 1) {
+            return prevTime - 1;
+          } else {
+            dispatch(resetPromo());
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [pomodaro, task._id, dispatch]);
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  const formatTimeForDisplay = (localTime: string) => {
+    if (!localTime) return "";
+
+    try {
+      const timePart = localTime.split("T")[1].substring(0, 5);
+      const [hours, minutes] = timePart.split(":").map(Number);
+
+      const period = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+
+      return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return localTime;
+    }
   };
 
   const priorityColors = {
@@ -34,10 +86,10 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   const handlePromoDaro = (startTime: string, start: boolean, task: ITask) => {
     const data = {
       id: task._id,
-      taskName: task.taskName,
+      taskName: task.title,
       date: task.date,
-      scheduleTime: task.startTime,
-      scheduleFinishTime: task.endTime,
+      scheduleTime: task.startTime.split("T")[1],
+      scheduleFinishTime: task.endTime.split("T")[1],
       startTime: startTime,
       start: start,
     };
@@ -51,16 +103,22 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   };
 
   return (
-    <div>
+    <div
+      onClick={() => {
+        if (pomodaro.id === task._id) {
+          navigate("/pomodoro");
+        }
+      }}
+      className={pomodaro.id === task._id ? "cursor-pointer" : ""}
+    >
       <div
         key={task._id}
         className="bg-gradient-to-t from-purple-50 to-pink-50 border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow w-full"
       >
         <div className="space-y-2">
-          {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
             <h4 className="font-medium text-gray-900">
-              {index + 1}. {task.taskName}
+              {index + 1}. {task.title}
             </h4>
             <span
               className={`text-xs font-medium rounded-full px-2 py-1 ${
@@ -71,31 +129,35 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
                   : "bg-green-100 text-green-800"
               }`}
             >
-              {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+              {task.status}
             </span>
           </div>
 
-          {/* Time Info */}
           <div className="flex items-center text-sm text-gray-600">
             <Clock size={14} className="mr-1" />
-            {formatTime(task.startTime)} - {formatTime(task.endTime)}
+            {formatTimeForDisplay(task.startTime)} -{" "}
+            {formatTimeForDisplay(task.endTime)}
           </div>
 
-          {/* Metadata */}
           <div className="text-xs text-gray-500">
             {formatDate(task.date).split(",")[0]} •{" "}
             {calculateDuration(task.startTime, task.endTime)} •{" "}
-            {task.pomodoro ? "Pomodoro Started" : "Pomodoro Not Started"}
+            {pomodaro.id === task._id ? (
+              <span className="font-semibold text-green-600">
+                Pomodoro Started: {formatTime(timeLeft)}
+              </span>
+            ) : (
+              "Pomodoro Not Started"
+            )}
           </div>
 
-          {/* Priority + Actions */}
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <span
               className={`inline-flex px-2 py-1 leading-none text-xs font-medium rounded-full ${
                 priorityColors[task.priority as keyof typeof priorityColors]
               }`}
             >
-              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              {task.priority}
             </span>
 
             <div className="flex gap-2">

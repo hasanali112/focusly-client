@@ -9,7 +9,6 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import Registration from "@/pages/Registration";
 import SettingsPage from "@/pages/SettingsPage";
 import TasksPage from "@/pages/TasksPage";
-import WeeklyTarget from "@/pages/WeeklyTarget";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -20,10 +19,6 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Dashboard />,
-      },
-      {
-        path: "weekly-target",
-        element: <WeeklyTarget />,
       },
       {
         path: "tasks",

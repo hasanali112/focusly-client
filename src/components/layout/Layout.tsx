@@ -3,12 +3,11 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import ProtectRoutes from "@/routes/private.routes";
-import Chatbot from "@/bot/Chatbot";
 
 const Layout: React.FC = () => {
   return (
     <ProtectRoutes>
-      <div className="flex h-screen bg-purple-50 relative">
+      <div className="min-h-screen bg-purple-50 relative w-full">
         <div className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
           <div
             className="absolute inset-0 w-full h-full bg-repeat"
@@ -20,12 +19,11 @@ const Layout: React.FC = () => {
         </div>
         <Sidebar />
 
-        <div className="flex-1 flex flex-col md:ml-52">
+        <div className="flex-1 flex flex-col md:ml-20 lg:ml-60">
           <Header />
 
-          <main className="flex-1 p-6 overflow-auto relative">
+          <main className="flex-1 p-6 overflow-auto relative mt-20">
             <Outlet />
-            <Chatbot />
           </main>
         </div>
       </div>

@@ -10,9 +10,10 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { generateContent } from "@/service/bot";
-import { useCreateTargetMutation } from "@/redux/features/target/target.api";
 import { handleRefinedPrompt } from "@/service/promptType";
 import { formatedResponse } from "@/service/formatedResponse";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { setTarget } from "@/redux/features/target/targetSlice";
 
 // Define types for our message object
 type Message = {
@@ -37,7 +38,7 @@ const Chatbot = () => {
   const [isClosed, setIsClosed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [createTarget] = useCreateTargetMutation();
+  const dispatch = useAppDispatch();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,13 +74,10 @@ const Chatbot = () => {
       try {
         if (
           inputMessage.toLowerCase().includes("save") &&
-          inputMessage.toLowerCase().includes("database")
+          inputMessage.toLowerCase().includes("and preview")
         ) {
-          const reqData = {
-            description: messages[messages.length - 1].text,
-          };
-
-          await createTarget(reqData).unwrap();
+          const responseAi = messages[messages.length - 1].text;
+          dispatch(setTarget(responseAi));
 
           // Add success message
           const successMessage: Message = {

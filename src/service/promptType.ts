@@ -10,7 +10,7 @@ const promptTypeOne = (prompt: string) => {
   endDate.setDate(currentDate.getDate() + 7);
   const formattedEndDate = endDate.toISOString();
 
-  return `Generate a plain text format study plan for me using the following structure. 
+  return `Ensure that there is no markdown in the response. Generate a plain text format study plan for me using the following structure. 
     Ensure that the "startDate" is set to the exact current time in ISO 8601 format (${startDate}) and "endDate" is set to exactly 7 days later (${formattedEndDate}). 
     Do not modify the provided dates.
 

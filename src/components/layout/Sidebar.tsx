@@ -1,4 +1,3 @@
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutGrid,
@@ -8,7 +7,6 @@ import {
   Settings,
   Clipboard,
   Wallet,
-  Target,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { Button } from "../ui/button";
@@ -16,16 +14,11 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { logout } from "@/redux/features/auth/authSlice";
 import MobileAppBar from "./MobileNav/MobileAppBar";
 
-const Sidebar: React.FC = () => {
+const Sidebar = () => {
   const location = useLocation();
   const dispath = useAppDispatch();
   const navItems = [
     { path: "/", icon: <LayoutGrid size={20} />, label: "Dashboard" },
-    {
-      path: "/weekly-target",
-      icon: <Target size={20} />,
-      label: "Target and Tasks",
-    },
     { path: "/tasks", icon: <ClipboardEdit size={20} />, label: "Tasks" },
     { path: "/planner", icon: <Calendar size={20} />, label: "Daily Planner" },
     { path: "/expenses", icon: <Wallet size={20} />, label: "Expenses" },
@@ -38,7 +31,7 @@ const Sidebar: React.FC = () => {
     <div>
       <div
         className="fixed top-0 left-0 h-full bg-white shadow-sm z-30
-      transition-all duration-300 ease-in-out w-52 hidden md:block"
+      transition-all duration-300 ease-in-out hidden md:block md:w-20 lg:w-60"
       >
         <div className="flex items-center justify-center pt-2">
           <img src={logo} alt="EfficiZen" className="w-20" />
@@ -60,8 +53,10 @@ const Sidebar: React.FC = () => {
                 `}
                   title={item.label}
                 >
-                  <span className="mr-4">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="lg:mr-4">{item.icon}</span>
+                  <span className="whitespace-nowrap hidden lg:inline">
+                    {item.label}
+                  </span>
                 </Link>
               </li>
             ))}

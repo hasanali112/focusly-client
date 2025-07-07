@@ -14,6 +14,7 @@ import {
 import storage from "redux-persist/lib/storage";
 import authReducer from "../redux/features/auth/authSlice";
 import pomodaroReducer from "./features/pomodaro/pomodaroSlice";
+import targetReducer from "./features/target/targetSlice";
 
 const persistConfig = {
   key: "auth",
@@ -25,17 +26,25 @@ const pomodaroPersistConfig = {
   storage,
 };
 
+const targetPersistConfig = {
+  key: "target",
+  storage,
+};
+
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 const persistedPomodaroReducer = persistReducer(
   pomodaroPersistConfig,
   pomodaroReducer
 );
 
+const persistedTarget = persistReducer(targetPersistConfig, targetReducer);
+
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
     auth: persistedAuthReducer,
     pomodaro: persistedPomodaroReducer,
+    target: persistedTarget,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

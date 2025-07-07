@@ -20,7 +20,7 @@ const TaskListUI = () => {
   const queryParams = [
     { key: "page", value: currentPage },
     { key: "limit", value: 20 },
-    { key: "sort", value: "-status" },
+    { key: "sort", value: "startTime" },
   ];
 
   if (activeTab) {
