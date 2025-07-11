@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/redux/hook";
 import { resetPromo } from "@/redux/features/pomodaro/pomodaroSlice";
@@ -19,6 +19,7 @@ const PomodoroTimer = () => {
   const [updateStartAndEndTime] = useUpdateStartAndEndTimeMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const hasStartedRef = useRef(false);
 
   // Create a unique task identifier using taskName and date
   const getTaskKey = () => {
@@ -59,6 +60,7 @@ const PomodoroTimer = () => {
             timeLeft: savedTimeLeft,
             isActive: savedIsActive,
             pausedTime: savedPausedTime,
+            hasStarted: savedHasStarted,
           } = JSON.parse(savedState);
 
           if (savedTaskKey === taskKey) {
@@ -66,6 +68,7 @@ const PomodoroTimer = () => {
               setTimeLeft(savedTimeLeft);
               setIsActive(savedIsActive);
               setPausedTime(savedPausedTime);
+              hasStartedRef.current = savedHasStarted;
 
               setInitialized(true);
               return;
@@ -106,12 +109,13 @@ const PomodoroTimer = () => {
     let interval = null;
 
     if (isActive && timeLeft > 0) {
-      if (timeLeft === parseStartTime()) {
+      if (!hasStartedRef.current) {
         const timeStart = new Date().toISOString();
         const payload = {
           workStartTime: timeStart,
         };
         updateStartAndEndTime({ id: pomodaro?.id, payload });
+        hasStartedRef.current = true;
       }
 
       interval = setInterval(() => {
@@ -119,10 +123,10 @@ const PomodoroTimer = () => {
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
-      const timeStart = new Date().toISOString();
+      const timeEnd = new Date().toISOString();
 
       const payload = {
-        workEndTime: timeStart,
+        workEndTime: timeEnd,
       };
       updateStartAndEndTime({ id: pomodaro?.id, payload });
       dispatch(resetPromo());
@@ -132,6 +136,7 @@ const PomodoroTimer = () => {
         icon: "success",
       });
       navigate("/tasks");
+      hasStartedRef.current = false; // Reset for the next run
     }
 
     return () => {
@@ -151,6 +156,7 @@ const PomodoroTimer = () => {
         timeLeft,
         isActive,
         pausedTime,
+        hasStarted: hasStartedRef.current, // Save the hasStarted state
       };
 
       localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(stateToSave));

@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/hooks/useAppSelector";
-import { setPomodaro } from "@/redux/features/pomodaro/pomodaroSlice";
+import {
+  resetPromo,
+  setPomodaro,
+} from "@/redux/features/pomodaro/pomodaroSlice";
 import { useUpdateTaskMutation } from "@/redux/features/task/taskApi";
 import { useAppDispatch } from "@/redux/hook";
 import { ITask } from "@/types";
@@ -60,17 +63,21 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
       .padStart(2, "0")}`;
   };
 
-  const formatTimeForDisplay = (localTime: string) => {
+  const formatTimeForDisplay = (localTime: string): string => {
     if (!localTime) return "";
 
     try {
-      const timePart = localTime.split("T")[1].substring(0, 5);
-      const [hours, minutes] = timePart.split(":").map(Number);
+      const date = new Date(localTime);
 
-      const period = hours >= 12 ? "PM" : "AM";
-      const displayHours = hours % 12 || 12;
+      // Convert to Bangladesh Time (Asia/Dhaka)
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Dhaka", // You can change this based on user location
+      };
 
-      return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+      return date.toLocaleTimeString("en-US", options); // Example: "10:34 PM"
     } catch (error) {
       console.error("Error formatting time:", error);
       return localTime;
