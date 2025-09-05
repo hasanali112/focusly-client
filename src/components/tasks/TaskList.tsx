@@ -9,12 +9,10 @@ import TaskHeader from "./taskHeader/TaskHeader";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TaskTable from "./taskTable/TaskTable";
 import Loading from "../Loading/Loading";
-import { useAppSelector } from "@/hooks/useAppSelector";
 
 const TaskListUI = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("pending");
-  const { user } = useAppSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = useState("");
 
   // Construct query params
   const queryParams = [
@@ -27,9 +25,6 @@ const TaskListUI = () => {
     queryParams.push({ key: "status", value: activeTab });
   }
 
-  // Only fetch if user is available
-  const skipQuery = !user?._id;
-
   const {
     data: tasksData,
     isLoading,
@@ -37,7 +32,6 @@ const TaskListUI = () => {
     isFetching,
   } = useGetAllTasksQuery(queryParams, {
     refetchOnMountOrArgChange: true,
-    skip: skipQuery,
   });
 
   // Extract tasks from response
@@ -64,25 +58,21 @@ const TaskListUI = () => {
 
       <div className="md:min-h-[80vh] h-full">
         <Tabs
-          defaultValue="pending"
+          defaultValue=""
           className="w-full mx-auto pt-4"
           onValueChange={handleTabChange}
         >
           <TabsList className="grid md:w-[400px] grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="inProgress">In Progress</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="complete">Completed</TabsTrigger>
             <TabsTrigger value="">All Tasks</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div>
           {/* Task items */}
-          {skipQuery ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">Please log in to view tasks</p>
-            </div>
-          ) : isLoading || isFetching ? (
+          {isLoading || isFetching ? (
             <div className="py-12 text-center">
               <Loading />
             </div>

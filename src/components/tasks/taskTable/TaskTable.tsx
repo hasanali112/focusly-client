@@ -1,22 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import {
   resetPromo,
   setPomodaro,
 } from "@/redux/features/pomodaro/pomodaroSlice";
-import { useUpdateTaskMutation } from "@/redux/features/task/taskApi";
+import {
+  useDeleteTaskMutation,
+  useUpdateTaskMutation,
+} from "@/redux/features/task/taskApi";
 import { useAppDispatch } from "@/redux/hook";
 import { ITask } from "@/types";
 import { calculateDuration, formatDate } from "@/utils/utils";
 import { Clock, Edit, Loader, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import TaskForm from "../TaskForm";
 
 const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   const dispatch = useAppDispatch();
   const { pomodaro } = useAppSelector((state) => state.pomodaro);
   const [loading, setLoading] = useState("");
   const [updateTask] = useUpdateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(0);
 
@@ -63,24 +78,20 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
       .padStart(2, "0")}`;
   };
 
-  const formatTimeForDisplay = (localTime: string): string => {
-    if (!localTime) return "";
+  const formatTimeForDisplay = (utcTime: string) => {
+    if (!utcTime) return "";
 
     try {
-      const date = new Date(localTime);
+      const utcDate = new Date(utcTime);
+      const hours = utcDate.getHours();
+      const minutes = utcDate.getMinutes();
 
-      // Convert to Bangladesh Time (Asia/Dhaka)
-      const options: Intl.DateTimeFormatOptions = {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Dhaka", // You can change this based on user location
-      };
-
-      return date.toLocaleTimeString("en-US", options); // Example: "10:34 PM"
+      const period = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+      return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
     } catch (error) {
       console.error("Error formatting time:", error);
-      return localTime;
+      return utcTime;
     }
   };
 
@@ -104,9 +115,20 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
   };
 
   const handleUpdateTask = (id: string) => {
-    updateTask(id);
+    updateTask({ id, payload: {} });
     setLoading(id);
     navigate("/pomodoro");
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await deleteTask(id).unwrap();
+      if (res?.success) {
+        toast.success(res.message);
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete task");
+    }
   };
 
   return (
@@ -147,8 +169,7 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
           </div>
 
           <div className="text-xs text-gray-500">
-            {formatDate(task.date).split(",")[0]} •{" "}
-            {calculateDuration(task.startTime, task.endTime)} •{" "}
+            {formatDate(task.date)} • {calculateDuration(task.startTime, task.endTime)} •{" "}
             {pomodaro.id === task._id ? (
               <span className="font-semibold text-green-600">
                 Pomodoro Started: {formatTime(timeLeft)}
@@ -168,12 +189,46 @@ const TaskTable = ({ task, index }: { task: ITask; index: number }) => {
             </span>
 
             <div className="flex gap-2">
-              <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100">
-                <Edit size={16} />
-              </button>
-              <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100">
-                <Trash size={16} />
-              </button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100">
+                    <Edit size={16} />
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Task</DialogTitle>
+                  </DialogHeader>
+                  <TaskForm isEdit={true} initialData={task} />
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="p-1 rounded-md text-gray-500 hover:bg-gray-100">
+                    <Trash size={16} />
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      Are you sure you want to delete this task?
+                    </DialogTitle>
+                    <DialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      the task.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline">Cancel</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDelete(task._id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 onClick={() => {
                   handlePromoDaro(

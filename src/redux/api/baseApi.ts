@@ -3,6 +3,7 @@ import { RootState } from "../store";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "https://effici-zen-server.vercel.app/api/v1",
+  //"https://effici-zen-server.vercel.app/api/v1"
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth.token;

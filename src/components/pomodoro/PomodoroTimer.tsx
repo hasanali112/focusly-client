@@ -6,7 +6,7 @@ import { useAppDispatch } from "@/redux/hook";
 import { resetPromo } from "@/redux/features/pomodaro/pomodaroSlice";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { useUpdateStartAndEndTimeMutation } from "@/redux/features/task/taskApi";
+import { useUpdateStartAndEndTimeMutation, useUpdateTaskMutation } from "@/redux/features/task/taskApi";
 
 const TIMER_STORAGE_KEY = "pomodoro_timer_state";
 
@@ -17,6 +17,7 @@ const PomodoroTimer = () => {
   const [pausedTime, setPausedTime] = useState<number | null>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [updateStartAndEndTime] = useUpdateStartAndEndTimeMutation();
+  const [updateTask] = useUpdateTaskMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const hasStartedRef = useRef(false);
@@ -129,6 +130,10 @@ const PomodoroTimer = () => {
         workEndTime: timeEnd,
       };
       updateStartAndEndTime({ id: pomodaro?.id, payload });
+      
+      // Update task status to complete
+      updateTask({ id: pomodaro?.id, payload: { status: "complete" } });
+      
       dispatch(resetPromo());
       Swal.fire({
         title: "Congratulations!",
